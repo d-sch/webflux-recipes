@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.buffer.DataBuffer;
 
 import io.github.d_sch.webfluxcustomjacksonstream.common.JsonWriter;
-import io.github.d_sch.webfluxcustomjacksonstream.common.cache.Cache;
-import io.github.d_sch.webfluxcustomjacksonstream.common.cache.CacheImpl;
+import io.github.d_sch.webfluxcustomjacksonstream.common.cache.FluxCache;
+import io.github.d_sch.webfluxcustomjacksonstream.common.cache.impl.FluxCacheImpl;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -43,7 +43,7 @@ public class FluxJsonGeneratorTest {
         @NonNull
         CachedConfig cachedConfig;
 
-        Cache<T> cache = new CacheImpl<>();
+        FluxCache<T> cache = new FluxCacheImpl<>();
 
         public Flux<T> get(Flux<K> keyFlux) {
             return cache.get(
@@ -76,7 +76,7 @@ public class FluxJsonGeneratorTest {
 
     @Test
     public void testCache() {
-        Cache<Integer> cache = new CacheImpl<>();
+        FluxCache<Integer> cache = new FluxCacheImpl<>();
 
         var testKeys = Flux.just(
             "Key 1", "Key 2", "Key 3", "Key 4", "Key 5"
@@ -125,7 +125,7 @@ public class FluxJsonGeneratorTest {
                 actual -> assertEquals(4, actual)
             ).assertNext(
                 actual -> assertEquals(5, actual)
-            ).verifyComplete();
+            ).expectNextCount(10).verifyComplete();
 
         StepVerifier.create(
             Mono.just(testKeys)
@@ -135,24 +135,14 @@ public class FluxJsonGeneratorTest {
                 ).doOnNext(
                     value -> log.info("Result {}", value)
                 )
-        ).assertNext(
-            actual -> assertEquals(1, actual)
-        ).assertNext(
-            actual -> assertEquals(2, actual)
-        ).assertNext(
-            actual -> assertEquals(3, actual)
-        ).assertNext(
-            actual -> assertEquals(4, actual)
-        ).assertNext(
-            actual -> assertEquals(5, actual)
         ).verifyComplete();
 
         testEntries = Flux.just(
-            Tuples.of("Key 1", 6),
-            Tuples.of("Key 2", 7),
-            Tuples.of("Key 3", 8),
-            Tuples.of("Key 4", 9),
-            Tuples.of("Key 5", 10)
+            Tuples.of("Key 1", 16),
+            Tuples.of("Key 2", 17),
+            Tuples.of("Key 3", 18),
+            Tuples.of("Key 4", 19),
+            Tuples.of("Key 5", 20)
         );
 
         StepVerifier.create(
@@ -163,15 +153,15 @@ public class FluxJsonGeneratorTest {
                 ).subscribeOn(Schedulers.single()
                 ).doOnNext(value -> log.info("Result {}", value))
         ).assertNext(
-            actual -> assertEquals(6, actual)
+            actual -> assertEquals(16, actual)
         ).assertNext(
-            actual -> assertEquals(7, actual)
+            actual -> assertEquals(17, actual)
         ).assertNext(
-            actual -> assertEquals(8, actual)
+            actual -> assertEquals(18, actual)
         ).assertNext(
-            actual -> assertEquals(9, actual)
+            actual -> assertEquals(19, actual)
         ).assertNext(
-            actual -> assertEquals(10, actual)
+            actual -> assertEquals(20, actual)
         ).verifyComplete();
 
         StepVerifier.create(
@@ -184,15 +174,15 @@ public class FluxJsonGeneratorTest {
                     value -> log.info("Result {}", value)
                 )
         ).assertNext(
-            actual -> assertEquals(6, actual)
+            actual -> assertEquals(16, actual)
         ).assertNext(
-            actual -> assertEquals(7, actual)
+            actual -> assertEquals(17, actual)
         ).assertNext(
-            actual -> assertEquals(8, actual)
+            actual -> assertEquals(18, actual)
         ).assertNext(
-            actual -> assertEquals(9, actual)
+            actual -> assertEquals(19, actual)
         ).assertNext(
-            actual -> assertEquals(10, actual)
+            actual -> assertEquals(20, actual)
         ).verifyComplete();
     }
 }
