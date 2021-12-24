@@ -1,23 +1,22 @@
-package io.github.d_sch.webfluxcustomjacksonstream.common.cache.impl;
+package io.github.d_sch.webfluxcustomjacksonstream.common.cache.internal;
 
 import java.time.Instant;
 
-import io.github.d_sch.webfluxcustomjacksonstream.common.cache.CacheEntry;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @RequiredArgsConstructor
-public class CacheEntryImpl<K, T> implements CacheEntry<K, T> {
+public class CacheEntryImpl<K, T> implements InternalCacheEntry<K, T> {
     
     @Getter
     @Setter
-    CacheEntry<K, T> next;
+    InternalCacheEntry<K, T> next;
 
     @Getter
     @Setter
-    CacheEntry<K, T> previous;
+    InternalCacheEntry<K, T> previous;
     
     CacheEntryImpl() {
     }

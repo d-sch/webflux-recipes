@@ -8,9 +8,12 @@ import java.util.function.Function;
 
 import io.github.d_sch.webfluxcustomjacksonstream.common.ThrowingRunnable;
 import io.github.d_sch.webfluxcustomjacksonstream.common.cache.FluxCache;
+import io.github.d_sch.webfluxcustomjacksonstream.common.cache.internal.CacheEntry;
+import io.github.d_sch.webfluxcustomjacksonstream.common.cache.internal.LRUCacheMap;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -25,8 +28,9 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
                 .entryExpirationChronoUnit(ChronoUnit.MILLIS)
                 .entryExpirationDuration(10)
                 .build();  
+    
     private Scheduler singleScheduler = Schedulers.newSingle(FluxCacheImpl.class.getName() + "-" + UUID.randomUUID());
-
+    
     private Disposable scheduledCleanUp;
 
     protected void scheduleCleanUp() {
@@ -34,20 +38,21 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
             log.debug("Schedule cache cleanup.");
             scheduledCleanUp = this.singleScheduler.createWorker().schedule(ThrowingRunnable.wrap(
                 () -> {
-                    log.debug("Run cache cleanup.");
-                    scheduledCleanUp = null;
+                    log.debug("Run cache cleanup.");                    
                     cacheMap.cleanUp();
+                    scheduledCleanUp.dispose();
+                    scheduledCleanUp = null;
                 })
             );            
         }
     }
 
-    protected Mono<T> get(String key) {
+    protected Mono<CacheEntry<String, T>> get(String key) {
         scheduleCleanUp();
         return Mono.justOrEmpty(cacheMap.get(key));
     }
 
-    protected Mono<T> put(String key, T value) {
+    protected Mono<CacheEntry<String, T>> put(String key, T value) {
         log.debug("Put: Key: {}, Value: {}", key, value);
         scheduleCleanUp();
         return Mono.justOrEmpty(cacheMap.put(key, value));
@@ -62,24 +67,24 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
             .publishOn(Schedulers.single());
     }
 
-    private Flux<T> getFromFlux(Flux<String> flux) {
+    private Flux<CacheEntry<String, T>> getFromFlux(Flux<String> flux) {
         return flux
             .flatMap(key -> get(key));
     }
 
-    private Flux<T> putFromFlux(Flux<Tuple2<String, T>> flux) {
+    private Flux<CacheEntry<String, T>> putFromFlux(Flux<Tuple2<String, T>> flux) {
         return flux
             .flatMap(entry -> put(entry.getT1(), entry.getT2()));
     }
 
     @Override
-    public Flux<T> get(Flux<String> keys) {
+    public Flux<CacheEntry<String, T>> get(Flux<String> keys) {
         return keys
             .transform(x -> publishOnCacheScheduler(x, this::getFromFlux));
     }
 
     @Override
-    public Flux<T> put(Flux<Tuple2<String, T>> entries) {
+    public Flux<CacheEntry<String, T>> put(Flux<Tuple2<String, T>> entries) {
         return entries
             .transform(x -> publishOnCacheScheduler(x, this::putFromFlux));
     }

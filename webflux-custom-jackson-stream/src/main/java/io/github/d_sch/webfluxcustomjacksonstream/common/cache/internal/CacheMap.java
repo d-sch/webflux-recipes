@@ -1,13 +1,11 @@
-package io.github.d_sch.webfluxcustomjacksonstream.common.cache.impl;
+package io.github.d_sch.webfluxcustomjacksonstream.common.cache.internal;
 
 import java.util.Iterator;
 
-import io.github.d_sch.webfluxcustomjacksonstream.common.cache.CacheEntry;
-
-public abstract class CacheMap<K, T> implements Iterable<CacheEntry<K,T>> {
+public abstract class CacheMap<K, T> implements Iterable<InternalCacheEntry<K,T>> {
        
-    private CacheEntry<K,T> first;
-    private CacheEntry<K,T> last;
+    private InternalCacheEntry<K,T> first;
+    private InternalCacheEntry<K,T> last;
 
     public CacheMap() {
         this.first = new CacheEntryImpl<K,T>();
@@ -16,25 +14,25 @@ public abstract class CacheMap<K, T> implements Iterable<CacheEntry<K,T>> {
         this.last.setPrevious(this.first);
     }
 
-    protected CacheEntry<K,T> insertFirst(CacheEntry<K,T> entry) {
+    protected InternalCacheEntry<K,T> insertFirst(InternalCacheEntry<K,T> entry) {
         return insertBefore(first.getNext(), entry);
     }
 
-    protected CacheEntry<K,T> insertBefore(CacheEntry<K, T> next, CacheEntry<K, T> entry) {
+    protected InternalCacheEntry<K,T> insertBefore(InternalCacheEntry<K, T> next, InternalCacheEntry<K, T> entry) {
         entry.setPrevious(next.getPrevious());
         next.setPrevious(entry);
         entry.setNext(next);
         return entry;
     }
 
-    protected CacheEntry<K,T> insertAfter(CacheEntry<K, T> previous, CacheEntry<K, T> entry) {
+    protected InternalCacheEntry<K,T> insertAfter(InternalCacheEntry<K, T> previous, InternalCacheEntry<K, T> entry) {
         entry.setNext(previous.getNext());
         previous.setNext(entry);
         entry.setPrevious(previous);
         return entry;
     }
 
-    protected CacheEntry<K,T> remove(CacheEntry<K, T> entry) {
+    protected InternalCacheEntry<K,T> remove(InternalCacheEntry<K, T> entry) {
         if (entry.getPrevious() == null) {
             //first entry
             first = entry.getNext();
@@ -53,15 +51,15 @@ public abstract class CacheMap<K, T> implements Iterable<CacheEntry<K,T>> {
         return entry;
     }
 
-    protected CacheEntry<K,T> appendLast(CacheEntry<K,T> entry) {
+    protected InternalCacheEntry<K,T> appendLast(InternalCacheEntry<K,T> entry) {
         return insertAfter(last.getPrevious(), entry);
     }
 
     @Override
-    public Iterator<CacheEntry<K, T>>  iterator() {
-        return new Iterator<CacheEntry<K, T>>() {
+    public Iterator<InternalCacheEntry<K, T>>  iterator() {
+        return new Iterator<InternalCacheEntry<K, T>>() {
             
-            CacheEntry<K,T> current = first.getNext();
+            InternalCacheEntry<K,T> current = first.getNext();
 
             @Override
             public boolean hasNext() {
@@ -69,7 +67,7 @@ public abstract class CacheMap<K, T> implements Iterable<CacheEntry<K,T>> {
             }
 
             @Override
-            public CacheEntry<K, T> next() {
+            public InternalCacheEntry<K, T> next() {
                 var result = current;
                 current = current.getNext();
                 return result;

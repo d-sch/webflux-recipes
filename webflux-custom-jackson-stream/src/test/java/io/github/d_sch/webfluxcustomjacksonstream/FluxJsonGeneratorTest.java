@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,14 +16,21 @@ import org.springframework.core.io.buffer.DataBuffer;
 import io.github.d_sch.webfluxcustomjacksonstream.common.JsonWriter;
 import io.github.d_sch.webfluxcustomjacksonstream.common.cache.FluxCache;
 import io.github.d_sch.webfluxcustomjacksonstream.common.cache.impl.FluxCacheImpl;
+import io.github.d_sch.webfluxcustomjacksonstream.common.cache.internal.CacheEntry;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.Builder.Default;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
+import reactor.util.concurrent.Queues;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -39,29 +49,78 @@ public class FluxJsonGeneratorTest {
         private Duration expirationDuration;
     }
 
-    public static abstract class Cached<K, T> {
+    public static abstract class Cached<K, T> implements Disposable {
         @NonNull
         CachedConfig cachedConfig;
 
         FluxCache<T> cache = new FluxCacheImpl<>();
 
-        public Flux<T> get(Flux<K> keyFlux) {
+        Sinks.Many<K> expiredKeySink; 
+
+        Disposable expiredKeyBatch;
+
+        public Cached() {
+            expiredKeySink = Sinks.many().unicast().onBackpressureBuffer(Queues.<K>small().get(), this);
+            expiredKeyBatch = 
+                    BatchFlux
+                        .<K>builder()
+                        .build()
+                        .batch(expiredKeySink.asFlux())
+                        .subscribe(
+                            batchFlux -> 
+                                find(batchFlux), 
+                                throwable -> log.warn("Error in expired key batch", throwable), 
+                                () -> {
+                                    expiredKeyBatch = null;
+                                    log.info("Expired key batch completed.");
+                                }
+                        );
+        }
+
+        @Builder
+        private static class BatchFlux<T> {
+            
+            @Default
+            private ChronoUnit batchDurationChronoUnit = ChronoUnit.SECONDS;
+            @Default
+            private long batchDuration = 1;
+            @Default
+            private int batchSize = 32;
+
+            public Flux<Flux<T>> batch(Flux<T> sourceFlux) {
+                return sourceFlux.windowTimeout(
+                            batchSize, 
+                            Duration.of(
+                                batchDuration, 
+                                batchDurationChronoUnit)
+                );
+            }
+
+        }
+        
+        public Flux<CacheEntry<String, T>> get(Flux<K> keyFlux) {
             return cache.get(
                 keyFlux
-                    .map(key -> cacheKey(key))
+                    .map(key -> toCacheKey(key))
             );
         }
 
-        protected Flux<T> put(Flux<Tuple2<K, T>> entryFlux) {
+        protected Flux<CacheEntry<String, T>> put(Flux<Tuple2<K, T>> entryFlux) {
             return cache.put(
                 entryFlux
-                    .map(entry -> entry.mapT1(key -> cacheKey(key)))
+                    .map(entry -> entry.mapT1(key -> toCacheKey(key)))
             );
         }
 
         protected abstract Flux<T> find(Flux<K> keyFlux);
 
-        public abstract String cacheKey(K key);
+        public abstract String toCacheKey(K key);
+        public abstract K fromCacheKey(K key);
+
+        @Override
+        public void dispose() {
+            expiredKeyBatch.dispose();
+        }
     }
 
     @Test
@@ -113,8 +172,9 @@ public class FluxJsonGeneratorTest {
                 .doOnNext(value -> log.info("Before put"))
                 .flatMap(entries -> 
                     cache.put(entries)
-                ).doOnNext(value -> log.info("Parallel Result {}", value)).sequential().publishOn(Schedulers.single())
-                .doOnNext(value -> log.info("Result {}", value))
+                ).doOnNext(entry -> log.info("Parallel Result {}", entry)).sequential().publishOn(Schedulers.single())
+                .doOnNext(entry -> log.info("Result {}", entry))
+                .map(entry -> entry.getValue())
             ).assertNext(
                 actual -> assertEquals(1, actual)
             ).assertNext(
