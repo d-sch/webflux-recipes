@@ -1,4 +1,4 @@
-package io.github.d_sch.webfluxcustomjacksonstream.common.cache.internal;
+package io.github.d_sch.webfluxcached.common.cache.internal;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -100,13 +100,13 @@ public class LRUCacheMap<K, T> extends CacheMap<K, T> {
                 log.debug("Get: Key: {}, Entry value expired", entry.getKey());
                 if (cleanUpExpiredValue) {
                     remove(entry);
-                    return null;
+                    return CacheEntry.empty(key);
                 }
                 return entry;
             }
         }
         log.debug("Get Key: {}, Not available");
-        return null;
+        return CacheEntry.empty(key);
     }
 
     public CacheEntry<K, T> put(K key, T value) {

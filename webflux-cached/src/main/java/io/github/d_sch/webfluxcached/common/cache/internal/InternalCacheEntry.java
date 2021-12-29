@@ -1,4 +1,4 @@
-package io.github.d_sch.webfluxcustomjacksonstream.common.cache.internal;
+package io.github.d_sch.webfluxcached.common.cache.internal;
 
 import java.time.Instant;
 
