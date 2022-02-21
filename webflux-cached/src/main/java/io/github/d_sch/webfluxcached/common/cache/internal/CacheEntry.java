@@ -38,6 +38,32 @@ public interface CacheEntry<K, T> extends Map.Entry<K, T> {
     }
 
     static <K, T> CacheEntry<K, T> empty(K key) {
-        return new CacheEntryImpl<>(Instant.now(), Instant.now(), key, null);
+        return new CacheEntry<>() {
+
+            @Override
+            public K getKey() {
+                return key;
+            }
+
+            @Override
+            public T getValue() {
+                return null;
+            }
+
+            @Override
+            public T setValue(T value) {
+                return null;
+            }
+
+            @Override
+            public Instant getEntryExpiresAt() {
+                return null;
+            }
+
+            @Override
+            public Instant getValueExpiresAt() {
+                return null;
+            }
+        };
     }
 }

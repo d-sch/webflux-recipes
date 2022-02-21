@@ -41,8 +41,8 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
     private LRUCacheMap<String, T> cacheMap = 
             LRUCacheMap.<String, T>builder()
                 .map(new HashMap<>())
-                .entryExpirationChronoUnit(ChronoUnit.MILLIS)
-                .entryExpirationDuration(10)
+                .entryExpirationChronoUnit(ChronoUnit.SECONDS)
+                .entryExpirationDuration(60)
                 .build();  
     
     private SchedulerContext schedulerContext;           
@@ -72,6 +72,7 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
     }
 
     protected Mono<CacheEntry<String, T>> get(String key) {
+        log.debug("Get: Key: {}", key);
         scheduleCleanUp();
         return Mono.justOrEmpty(cacheMap.get(key));
     }

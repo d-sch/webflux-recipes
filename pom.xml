@@ -18,8 +18,8 @@
 	<description>Demo projects for Spring Boot</description>
     <packaging>pom</packaging>
     <modules>
+		<module>webflux-config</module>
         <module>webflux-cached</module>
         <module>webflux-custom-jackson-stream</module>
     </modules>
-
 </project>

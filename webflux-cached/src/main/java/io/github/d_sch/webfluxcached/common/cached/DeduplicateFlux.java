@@ -16,6 +16,7 @@
 
 package io.github.d_sch.webfluxcached.common.cached;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -25,7 +26,6 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.netty.resources.LoopResources;
-import reactor.util.function.Tuples;
 
 //Ensure single        
 public class DeduplicateFlux<K, T> implements Disposable {
@@ -33,8 +33,9 @@ public class DeduplicateFlux<K, T> implements Disposable {
     @NonNull
     LoopResources loopResources = LoopResources.create("prefix");
 
-    Map<K, Sinks.One<Map.Entry<K, T>>> resultSinkMap;            
-    Sinks.Many<Map.Entry<K, Sinks.One<T>>> distinctSink;
+    Map<K, Sinks.One<Map.Entry<K, T>>> resultSinkMap = new HashMap<>();            
+ 
+    Function<Flux<K>, Flux<Map.Entry<K, T>>> target;
 
     Disposable distinctResultFlux;
 
@@ -45,57 +46,45 @@ public class DeduplicateFlux<K, T> implements Disposable {
 
     public DeduplicateFlux(LoopResources loopResources, Function<Flux<K>, Flux<Map.Entry<K, T>>> target) {
         this.loopResources = loopResources;
-        distinctSink = Sinks.many().unicast().onBackpressureBuffer();                
-        distinctResultFlux = 
-            distinctSink
-                .asFlux()
-                .map(
-                    tuple -> {
-                        tuple.getValue()
-                            .asMono()
-                            .subscribe(
-                                ignore -> {}, 
-                                ignore -> {}, 
-                                () -> resultSinkMap.remove(tuple.getKey())
-                            );
-                        return tuple.getKey();
-                    }
-                ).transform(target)
-                .subscribe(
-                    tuple -> {
-                        resultSinkMap.get(tuple.getKey()).emitValue(tuple, Sinks.EmitFailureHandler.FAIL_FAST);
-                    }
-                );                
+        this.target = target;
     }
 
     protected Flux<Map.Entry<K, T>> deduplicate(Flux<K> flux) {
         return flux.transform(
-            fluxBefore -> this.schedulerContext.transform(fluxBefore, inFlux -> dedup(resultSinkMap, fluxBefore, distinctSink))
+            fluxBefore -> this.schedulerContext.transform(fluxBefore, inFlux -> dedup(resultSinkMap, fluxBefore, target))
         );
     }
 
-    protected static <K, T> Flux<Map.Entry<K, T>> dedup(Map<K, Sinks.One<Map.Entry<K, T>>> resultSinkMap, Flux<K> inFlux, Sinks.Many<Map.Entry<K, Sinks.One<T>>> outSink) {
-        return inFlux.map(key -> 
-            Tuples.of(key, resultSinkMap.containsKey(key))
-        ).groupBy(
-            x -> x.getT2(),
-            x -> x.getT1()
-        ).flatMap(x -> {                
-            if (x.key()) {                        
-                return x.flatMap(key -> resultSinkMap.get(key).asMono());
+    protected static <K, T> Flux<Map.Entry<K, T>> dedup(Map<K, Sinks.One<Map.Entry<K, T>>> resultSinkMap, Flux<K> inFlux, Function<Flux<K>, Flux<Map.Entry<K, T>>> target) {
+        return inFlux.groupBy(
+            key -> resultSinkMap.containsKey(key)
+        ).concatMap(group -> {                
+            if (group.key()) {                        
+                return group
+                    .concatMap(key -> resultSinkMap.get(key).asMono());
             } else {
-                return x.flatMap(key -> {
-                    Sinks.One<Map.Entry<K, T>> sink = Sinks.one();                            
-                    sink = resultSinkMap.putIfAbsent(key, sink);
-                    sink
-                        .asMono()
-                        .subscribe(
-                            ignore -> {}, 
-                            ignore -> {}, 
-                            () -> resultSinkMap.remove(key)
-                        );
-                    return sink.asMono();                            
-                });
+                return group
+                    .transform(flux -> {
+                        return target.apply(
+                            flux.doOnNext(key -> {
+                                Sinks.One<Map.Entry<K, T>> sink = Sinks.one();                           
+                                var oldSink = resultSinkMap.putIfAbsent(key, sink);
+                                if (oldSink != null)  {
+                                    sink = oldSink;
+                                }
+                                sink
+                                    .asMono()
+                                    .subscribe(
+                                        ignore -> {}, 
+                                        ignore -> {}, 
+                                        () -> resultSinkMap.remove(key)
+                                    );                                                                                        
+                            })
+                        ).doOnNext(entry -> {
+                            var sink = resultSinkMap.get(entry.getKey());
+                            sink.emitValue(entry, Sinks.EmitFailureHandler.FAIL_FAST);                        
+                        });
+                    });
             }
         });
     }

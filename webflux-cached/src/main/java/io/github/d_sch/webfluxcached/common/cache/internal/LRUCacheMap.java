@@ -31,7 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Builder
 @Slf4j
-public class LRUCacheMap<K, T> extends CacheMap<K, T> {
+public class LRUCacheMap<K, T> {
+
+    @Builder.Default
+    SimpleLinkedQueue<K, T> queue = new SimpleLinkedQueue<>();
 
     @Getter
     @Default
@@ -64,7 +67,7 @@ public class LRUCacheMap<K, T> extends CacheMap<K, T> {
     private boolean cleanUpExpiredValue = true;
 
     protected InternalCacheEntry<K, T> putNew(K key, T value) {
-        var entry = appendLast(
+        var entry = queue.appendLast(
             new CacheEntryImpl<>(
                     entryExpirationChronoUnit.equals(ChronoUnit.FOREVER) 
                         ? Instant.MAX 
@@ -88,7 +91,7 @@ public class LRUCacheMap<K, T> extends CacheMap<K, T> {
 
     protected InternalCacheEntry<K, T> touch(InternalCacheEntry<K, T> entry) {
         entry.setEntryExpiresAt(calculateExpirationTime(Instant.now(), entryExpirationDuration, entryExpirationChronoUnit));
-        return appendLast(entry);
+        return queue.appendLast(entry);
     }
 
     protected InternalCacheEntry<K, T> update(InternalCacheEntry<K, T> entry, T value) {
@@ -98,7 +101,7 @@ public class LRUCacheMap<K, T> extends CacheMap<K, T> {
     }
 
     protected InternalCacheEntry<K, T> remove(InternalCacheEntry<K, T> entry) {
-        super.remove(entry);
+        queue.remove(entry);
         return map.remove(entry.getKey());
     }
 
@@ -109,7 +112,7 @@ public class LRUCacheMap<K, T> extends CacheMap<K, T> {
             var entry = map.get(key);
             entry = this.touch(entry);
             //Check value expiration
-            if (entry.isValueExpired()) {
+            if (!entry.isValueExpired()) {
                 log.debug("Get: Key: {}, Return value: {}", entry.getKey(), entry.getValue());
                 return entry;
             } else {
@@ -142,7 +145,7 @@ public class LRUCacheMap<K, T> extends CacheMap<K, T> {
     }
 
     public void cleanUp() {
-        var iterator = this.iterator();
+        var iterator = queue.iterator();
         while (iterator.hasNext()) {
             var entry = iterator.next();
             if (entry.isEntryExpired()) {

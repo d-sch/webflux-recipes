@@ -16,127 +16,86 @@
 
 package io.github.d_sch.webfluxcached.common.cached;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.function.Function;
 
 import org.springframework.http.client.reactive.ReactorResourceFactory;
+
 import io.github.d_sch.webfluxcached.common.KeyValueHolder;
-import io.github.d_sch.webfluxcached.common.SchedulerContext;
 import io.github.d_sch.webfluxcached.common.cache.FluxCache;
 import io.github.d_sch.webfluxcached.common.cache.impl.FluxCacheImpl;
 import io.github.d_sch.webfluxcached.common.cache.internal.CacheEntry;
-import lombok.Builder;
 import lombok.NonNull;
-import lombok.Builder.Default;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
-import reactor.netty.resources.LoopResources;
-import reactor.util.concurrent.Queues;
-import reactor.util.function.Tuples;
 
-@Slf4j
-public abstract class Cached<K, T> implements Disposable {
-    @NonNull
-    CachedConfig cachedConfig;
-
+public class Cached<K, T> {
     @NonNull
     ReactorResourceFactory reactorResourceFactory;
 
-    FluxCache<T> cache = new FluxCacheImpl<>(reactorResourceFactory.getLoopResources());
+    final FluxCache<T> cache;
 
-    DeduplicateFlux<K, T> lookup = new DeduplicateFlux<>(reactorResourceFactory.getLoopResources(), this::doLookup);
+    final DeduplicateFlux<K, T> lookup;
 
     Sinks.Many<K> expiredKeySink; 
 
     Disposable expiredKeyBatch;
 
-    @Builder
-    private static class BatchFlux<T> {
-        @Default
-        private ChronoUnit batchDurationChronoUnit = ChronoUnit.SECONDS;
-        @Default
-        private long batchDuration = 1;
-        @Default
-        private int batchSize = 32;
+    private Function<K, String> toCacheKey;
+    private Function<String, K> fromCacheKey;
 
-        public Flux<Flux<T>> batch(Flux<T> sourceFlux) {
-            return sourceFlux.windowTimeout(
-                        batchSize, 
-                        Duration.of(
-                            batchDuration, 
-                            batchDurationChronoUnit)
-            );
-        }
+    private K fromCacheEntry(CacheEntry<String, T> entry) {
+        return fromCacheKey.apply(entry.getKey());
     }
 
-    public Cached() {
-        expiredKeySink = Sinks.many().unicast().onBackpressureBuffer(Queues.<K>small().get(), this);
-        expiredKeyBatch = 
-                BatchFlux
-                    .<K>builder()
-                    .build()
-                    .batch(expiredKeySink.asFlux())
-                    .subscribe(
-                        batchFlux -> 
-                            lookup(batchFlux), 
-                            throwable -> log.warn("Error in expired key batch", throwable), 
-                            () -> {
-                                expiredKeyBatch = null;
-                                log.info("Expired key batch completed.");
-                            }
-                    );
+    private Cached(ReactorResourceFactory reactorResourceFactory, Function<K, String> toCacheKey, Function<String, K> fromCacheKey, Function<Flux<K>, Flux<Map.Entry<K,T>>> lookup) {
+        this.reactorResourceFactory = reactorResourceFactory;
+        this.toCacheKey = toCacheKey;
+        this.fromCacheKey = fromCacheKey;
+        this.lookup = new DeduplicateFlux<>(reactorResourceFactory.getLoopResources(), lookup);
+        this.cache = new FluxCacheImpl<>(reactorResourceFactory.getLoopResources());
     }
-   
+    
+    public static <K, T> Cached<K, T> build(ReactorResourceFactory reactorResourceFactory, Function<K, String> toCacheKey, Function<String, K> fromCacheKey, Function<Flux<K>, Flux<Map.Entry<K,T>>> lookup) {
+        return new Cached<>(reactorResourceFactory, toCacheKey, fromCacheKey, lookup);
+    }
+
     public Flux<Map.Entry<K, T>> getAll(Flux<K> keyFlux) {
-        return getFromCache(keyFlux
-                .map(key -> toCacheKey(key))
-            ).groupBy(
-                cacheEntry -> cacheEntry.isEmpty() && cacheEntry.isValueExpired()
+        return keyFlux
+            .map(toCacheKey::apply)
+            .transform(this::getFromCache)
+            .groupBy(
+                cacheEntry -> cacheEntry.isEmpty() || cacheEntry.isValueExpired()
             ).flatMap(
                 groupedFlux -> {
                     if (groupedFlux.key()) {
-                        return                                
-                            lookup(
-                                groupedFlux.map(cacheEntry -> fromCacheKey(cacheEntry.getKey()))
-                            ).transform(
-                                flux -> put(flux)
-                            );
+                        return  
+                            groupedFlux.map(this::fromCacheEntry)
+                                .transform(this::lookup)                              
+                                .transform(
+                                    this::put
+                                );
                     } else {
                         return groupedFlux;                                
                     }
                 }
-            ).map(cacheEntry -> KeyValueHolder.of(fromCacheKey(cacheEntry.getKey()), cacheEntry.getValue()));
+            ).map(cacheEntry -> KeyValueHolder.of(fromCacheEntry(cacheEntry), cacheEntry.getValue()));
     }
 
-    public Flux<CacheEntry<String, T>> getFromCache(Flux<String> keyFlux) {
-        return cache.get(
-            keyFlux                    
-        );
+    private Flux<CacheEntry<String, T>> getFromCache(Flux<String> keyFlux) {
+        return keyFlux
+                .transform(cache::get);
     }
 
     protected Flux<CacheEntry<String, T>> put(Flux<Map.Entry<K, T>> entryFlux) {
-        return cache.put(
-            entryFlux
-                .map(entry -> KeyValueHolder.of(toCacheKey(entry.getKey()), entry.getValue()))
-        );
+        return entryFlux
+                .map(entry -> KeyValueHolder.of(toCacheKey.apply(entry.getKey()), entry.getValue()))
+                .transform(cache::put);
     }
 
     protected Flux<Map.Entry<K, T>> lookup(Flux<K> keyFlux) {
         return lookup.deduplicate(keyFlux);
-    }
-
-    protected abstract Flux<Map.Entry<K, T>> doLookup(Flux<K> keyFlux);
-
-    public abstract String toCacheKey(K key);
-    public abstract K fromCacheKey(String key);
-
-    @Override
-    public void dispose() {
-        expiredKeyBatch.dispose();
     }
 }
 

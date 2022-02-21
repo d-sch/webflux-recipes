@@ -15,35 +15,18 @@
  */
 
 package io.github.d_sch.webfluxcached.common;
+import java.util.function.Supplier;
 
-import java.util.Map;
+public interface ThrowingSupplier<T> {
+    T get() throws Exception;
 
-public class KeyValueHolder<K, T> implements Map.Entry<K, T> {
-
-    private K key;
-    private T value;
-
-    public KeyValueHolder(K key, T value) {
-        this.key = key;
-        this.value = value;
+    static <T> Supplier<T> wrap(ThrowingSupplier<T> consumer) {
+        return () -> {
+            try {
+                return consumer.get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
     }
-
-    @Override
-    public K getKey() {
-        return key;
-    }
-    @Override
-    public T getValue() {
-        return value;
-    }
-    @Override
-    public T setValue(T value) {
-        this.value = value;
-        return null;
-    }
-    
-    public static <K, T> Map.Entry<K, T> of (K key, T value) {
-        return new KeyValueHolder<K, T>(key, value);
-    }
-
 }

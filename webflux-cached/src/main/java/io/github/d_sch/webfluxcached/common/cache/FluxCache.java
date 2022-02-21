@@ -21,7 +21,6 @@ import java.util.Map;
 import io.github.d_sch.webfluxcached.common.cache.internal.CacheEntry;
 import io.github.d_sch.webfluxcached.common.cache.internal.LRUCacheMap;
 import reactor.core.publisher.Flux;
-import reactor.util.function.Tuple2;
 
 public interface FluxCache<T> {
 

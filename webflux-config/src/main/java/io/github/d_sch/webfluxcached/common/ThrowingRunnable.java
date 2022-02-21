@@ -16,34 +16,18 @@
 
 package io.github.d_sch.webfluxcached.common;
 
-import java.util.Map;
+public interface ThrowingRunnable {
 
-public class KeyValueHolder<K, T> implements Map.Entry<K, T> {
+    void run();
 
-    private K key;
-    private T value;
-
-    public KeyValueHolder(K key, T value) {
-        this.key = key;
-        this.value = value;
-    }
-
-    @Override
-    public K getKey() {
-        return key;
-    }
-    @Override
-    public T getValue() {
-        return value;
-    }
-    @Override
-    public T setValue(T value) {
-        this.value = value;
-        return null;
+    static <T> Runnable wrap(ThrowingRunnable throwingRunnable) {
+        return () -> {
+            try {
+                throwingRunnable.run();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
     }
     
-    public static <K, T> Map.Entry<K, T> of (K key, T value) {
-        return new KeyValueHolder<K, T>(key, value);
-    }
-
 }

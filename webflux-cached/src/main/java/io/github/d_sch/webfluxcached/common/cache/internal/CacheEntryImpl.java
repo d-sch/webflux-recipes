@@ -35,6 +35,8 @@ public class CacheEntryImpl<K, T> implements InternalCacheEntry<K, T> {
     InternalCacheEntry<K, T> previous;
     
     CacheEntryImpl() {
+        this.entryExpiresAt = Instant.MAX;
+        this.valueExpiresAt = Instant.MAX;
     }
 
     @Getter

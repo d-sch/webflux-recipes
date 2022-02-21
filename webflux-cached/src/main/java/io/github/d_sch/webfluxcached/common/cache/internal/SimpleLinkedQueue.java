@@ -18,12 +18,12 @@ package io.github.d_sch.webfluxcached.common.cache.internal;
 
 import java.util.Iterator;
 
-public abstract class CacheMap<K, T> implements Iterable<InternalCacheEntry<K,T>> {
+public class SimpleLinkedQueue<K, T> implements Iterable<InternalCacheEntry<K,T>> {
        
     private InternalCacheEntry<K,T> first;
     private InternalCacheEntry<K,T> last;
 
-    public CacheMap() {
+    public SimpleLinkedQueue() {
         this.first = new CacheEntryImpl<K,T>();
         this.last = new CacheEntryImpl<K,T>();
         this.first.setNext(this.last);
@@ -53,7 +53,7 @@ public abstract class CacheMap<K, T> implements Iterable<InternalCacheEntry<K,T>
             //first entry
             first = entry.getNext();
             first.setPrevious(null);
-        } else if (entry.getNext()   == null) {
+        } else if (entry.getNext() == null) {
             //last entry
             last = entry.getPrevious();
             last.setNext(null);
@@ -79,7 +79,7 @@ public abstract class CacheMap<K, T> implements Iterable<InternalCacheEntry<K,T>
 
             @Override
             public boolean hasNext() {
-                return current.getNext() != null;
+                return current.getNext() != null && current.getNext() != last;
             }
 
             @Override
