@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2021 d-sch
+ * Copyright 2021 - 2023 d-sch
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,4 +45,5 @@ public class KeyValueHolder<K, T> implements Map.Entry<K, T> {
     public static <K, T> Map.Entry<K, T> of (K key, T value) {
         return new KeyValueHolder<K, T>(key, value);
     }
+
 }

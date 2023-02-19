@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2021 d-sch
+ * Copyright 2021 - 2023 d-sch
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.Map;
 import io.github.d_sch.webfluxcached.common.cache.internal.CacheEntry;
 import io.github.d_sch.webfluxcached.common.cache.internal.LRUCacheMap;
 import reactor.core.publisher.Flux;
-import reactor.util.function.Tuple2;
 
 public interface FluxCache<T> {
 

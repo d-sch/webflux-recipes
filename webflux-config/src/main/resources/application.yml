@@ -1,0 +1,12 @@
+server:
+    port: 8080
+    netty:
+        max-chunk-size:
+            64KB
+
+r2dbc:
+    demo:
+        url:r2dbc:h2:mem:///demo
+        username:conn
+        password:conn
+
