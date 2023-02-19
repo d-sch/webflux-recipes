@@ -62,7 +62,7 @@ public class Cached<K, T> {
             reactorResourceFactory, 
             toCacheKey, 
             fromCacheKey, 
-            new DeduplicateFlux<>(reactorResourceFactory.getLoopResources(), lookup)::deduplicate,
+            lookup,
             new FluxCacheImpl<>(reactorResourceFactory.getLoopResources())
         );
     }

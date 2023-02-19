@@ -9,9 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.stereotype.Component;
@@ -32,8 +34,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
-@ContextConfiguration(classes = {CachedTest.TestConfig.class})
+@SpringBootTest()
+@ContextConfiguration(classes=CachedTest.TestConfig.class)
 public class CachedTest {   
 
     @TestConfiguration
