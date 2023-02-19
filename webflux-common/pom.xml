@@ -8,21 +8,15 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<groupId>io.github.d-sch</groupId>
-	<artifactId>webflux-cached</artifactId>
+	<artifactId>webflux-common</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>webflux-cached</name>
-	<description>Demo project for Spring Boot</description>
+	<name>webflux-common</name>
+	<description>Common helper</description>
 	<packaging>jar</packaging>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -33,7 +27,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -48,16 +45,6 @@
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.github.d-sch</groupId>
-			<artifactId>webflux-custom-jackson-stream</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>io.github.d-sch</groupId>
-			<artifactId>webflux-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

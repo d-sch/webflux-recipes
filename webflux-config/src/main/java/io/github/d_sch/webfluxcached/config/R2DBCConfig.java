@@ -9,8 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.r2dbc.ConnectionFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.util.UriComponents;
-
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.Option;
@@ -38,8 +36,6 @@ public class R2DBCConfig {
     }
 
     public static ConnectionFactoryOptions.Builder buildConnectionFactoryOptions(R2dbcProperties r2dbcProperties) {
-        UriComponents
-
 		ConnectionFactoryOptions urlOptions = ConnectionFactoryOptions.parse(r2dbcProperties.getUrl());
 		ConnectionFactoryOptions.Builder optionsBuilder = urlOptions.mutate();
         predicateSet(r2dbcProperties.getUsername(), s -> s != null && s.length() > 0, s -> optionsBuilder.option(ConnectionFactoryOptions.USER, s));

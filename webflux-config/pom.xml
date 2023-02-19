@@ -51,6 +51,11 @@
 			<artifactId>webflux-custom-jackson-stream</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>io.github.d-sch</groupId>
+			<artifactId>webflux-cached</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2021 d-sch
+ * Copyright 2021 - 2023 d-sch
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.github.d_sch.webfluxcustomjacksonstream.common;
-import java.util.function.Consumer;
+package io.github.d_sch.webfluxcommon.common;
+import java.util.function.Supplier;
 
-public interface ThrowingConsumer<T> {
-    void accept(T value) throws Exception;
+public interface ThrowingSupplier<T> {
+    T get() throws Exception;
 
-    static <T> Consumer<T> wrap(ThrowingConsumer<T> consumer) {
-        return (value) -> {
+    static <T> Supplier<T> wrap(ThrowingSupplier<T> consumer) {
+        return () -> {
             try {
-                consumer.accept(value);
+                return consumer.get();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2021 d-sch
+ * Copyright 2021 - 2023 d-sch
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.d_sch.webfluxcustomjacksonstream.common;
+package io.github.d_sch.webfluxcommon.common;
 
 public interface ThrowingRunnable {
 

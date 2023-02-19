@@ -4,8 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
-        
         {
             "type": "java",
             "name": "Launch Current File",
@@ -18,6 +16,16 @@
             "request": "launch",
             "mainClass": "io.github.d_sch.webfluxcustomjacksonstream.WebfluxCustomJacksonStreamApplication",
             "projectName": "webflux-custom-jackson-stream"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-Application<webflux-cached>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "io.Application",
+            "projectName": "webflux-cached",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

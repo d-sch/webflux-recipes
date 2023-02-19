@@ -1,4 +1,4 @@
-package io.github.d_sch.webfluxcustomjacksonstream;
+package io.github.d_sch.webfluxcached;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,6 +26,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import io.github.d_sch.webfluxcached.common.KeyValueHolder;
+import io.github.d_sch.webfluxcached.common.cache.impl.FluxCacheImpl;
 import io.github.d_sch.webfluxcached.common.cached.Cached;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -73,6 +74,5 @@ public class CachedTest {
         assertEquals(1, a.getKey());
         assertEquals("Test", a.getValue());
     }
-
 
 }

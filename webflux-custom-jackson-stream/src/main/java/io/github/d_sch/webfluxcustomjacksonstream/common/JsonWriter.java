@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2021 d-sch
+ * Copyright 2021 - 2023 d-sch
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 
+import io.github.d_sch.webfluxcommon.common.ThrowingConsumer;
+import io.github.d_sch.webfluxcommon.common.ThrowingSupplier;
 import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
 import reactor.core.publisher.Flux;
 

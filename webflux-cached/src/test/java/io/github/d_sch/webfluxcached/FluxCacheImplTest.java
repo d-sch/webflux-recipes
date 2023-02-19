@@ -1,4 +1,4 @@
-package io.github.d_sch.webfluxcustomjacksonstream;
+package io.github.d_sch.webfluxcached;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -12,6 +12,7 @@ import io.github.d_sch.webfluxcached.common.KeyValueHolder;
 import io.github.d_sch.webfluxcached.common.cache.FluxCache;
 import io.github.d_sch.webfluxcached.common.cache.impl.FluxCacheImpl;
 import io.github.d_sch.webfluxcached.common.cache.internal.CacheEntry;
+import io.github.d_sch.webfluxcached.common.cached.Cached;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,8 @@ public class FluxCacheImplTest {
 
     @Test
     public void testCache() {
-        FluxCache<Integer> cache = new FluxCacheImpl<>(LoopResources.create("prefix"));
+        var loopResources = LoopResources.create("prefix");
+        FluxCache<Integer> cache = new FluxCacheImpl<>(loopResources);
 
         var testKeys = Flux.just(
             "Key 1", "Key 2", "Key 3", "Key 4", "Key 5"
@@ -72,10 +74,12 @@ public class FluxCacheImplTest {
             Flux.just(testEntries, testEntries2, testEntries3)  
                 .publishOn(Schedulers.single())
                 .parallel()
-                .doOnNext(value -> log.info("Before put"))
+                .doOnNext(value -> log.info("Before put {}"))
                 .flatMap(entries -> 
                     cache.put(entries)
-                ).doOnNext(entry -> log.info("Parallel Result {}", entry.getValue())).sequential().publishOn(Schedulers.single())
+                ).doOnNext(entry -> log.info("Parallel Result {}", entry.getValue()))
+                .sequential()
+                .publishOn(Schedulers.single())
                 .doOnNext(entry -> log.info("Result {}", entry.getValue()))
                 .flatMapSequential(entry -> Mono.just(entry.getValue()))
             ).expectNextCount(15).verifyComplete();
@@ -84,11 +88,11 @@ public class FluxCacheImplTest {
             Mono.just(testKeys)
                 .flatMapMany(keys -> 
                     cache.get(keys)
-                ).subscribeOn(Schedulers.single()
+                ).publishOn(Schedulers.single()
                 ).doOnNext(
-                    value -> log.info("Result {}", value)
+                    entry -> log.info("Result {}", entry.getValue())
                 )
-        ).verifyComplete();
+        ).expectNextCount(5).verifyComplete();
 
         testEntries = Flux.just(
             KeyValueHolder.of("Key 1", 16),
@@ -104,7 +108,7 @@ public class FluxCacheImplTest {
                 .flatMapMany(entries -> 
                     cache.put(entries)
                 ).subscribeOn(Schedulers.single()
-                ).doOnNext(value -> log.info("Result {}", value.getValue()))
+                ).doOnNext(entry -> log.info("Result {}", entry.getValue()))
                 .map(CacheEntry::getValue)
         ).assertNext(
             actual -> assertEquals(16, actual)
@@ -123,10 +127,10 @@ public class FluxCacheImplTest {
                 .publishOn(Schedulers.single())
                 .flatMapMany(keys -> 
                     cache.get(keys)
-                ).subscribeOn(Schedulers.single()
+                
                 ).doOnNext(
-                    value -> log.info("Result {}", value)
+                    entry -> log.info("Result {}", entry.getValue())
                 )
-        ).verifyComplete();
+        ).expectNextCount(5).verifyComplete();
     }
 }

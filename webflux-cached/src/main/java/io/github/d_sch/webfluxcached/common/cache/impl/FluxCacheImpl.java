@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2021 d-sch
+ * Copyright 2021 - 2023 d-sch
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.github.d_sch.webfluxcached.common.SchedulerContext;
-import io.github.d_sch.webfluxcached.common.ThrowingRunnable;
+import io.github.d_sch.webfluxcommon.common.SchedulerContext;
+import io.github.d_sch.webfluxcommon.common.ThrowingRunnable;
 import io.github.d_sch.webfluxcached.common.cache.FluxCache;
 import io.github.d_sch.webfluxcached.common.cache.internal.CacheEntry;
 import io.github.d_sch.webfluxcached.common.cache.internal.LRUCacheMap;
@@ -51,9 +51,13 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
 
     public FluxCacheImpl(LoopResources loopResources) {
         this.loopResources = loopResources;
+        //Create SchedulerContext
+        //ensure one single event loop is used before and after cache action
+        //to serialize cache access
+        var eventLoop = loopResources.onServer(true).next();
         this.schedulerContext = SchedulerContext.EXECUTOR_BUILDER.apply(
-            loopResources.onServer(true).next(),
-            loopResources.onServer(true)
+            eventLoop,
+            eventLoop
         );
     }
 
