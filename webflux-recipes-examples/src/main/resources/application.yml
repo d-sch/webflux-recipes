@@ -1,0 +1,22 @@
+server:
+    port: 8080
+    netty:
+        max-chunk-size:
+            64KB
+
+management:
+  endpoints:
+    enabled-by-default: true
+    web:
+      exposure:
+        include: 
+            - "*"
+
+r2dbc:
+    enabled: true
+    options:
+        demo:
+            url: r2dbc:h2:mem:///demo
+            username: conn
+            password: conn
+

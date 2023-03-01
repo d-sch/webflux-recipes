@@ -22,5 +22,6 @@
 		<module>webflux-config</module>
         <module>webflux-cached</module>
         <module>webflux-custom-jackson-stream</module>
+		<module>webflux-recipes-examples</module>
     </modules>
 </project>
