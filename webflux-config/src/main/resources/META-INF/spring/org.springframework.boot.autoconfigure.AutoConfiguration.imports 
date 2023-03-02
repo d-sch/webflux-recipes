@@ -1,0 +1,2 @@
+EnableAutoConfiguration=\
+    io.github.d_sch.webfluxconfig.R2DBCConfig
