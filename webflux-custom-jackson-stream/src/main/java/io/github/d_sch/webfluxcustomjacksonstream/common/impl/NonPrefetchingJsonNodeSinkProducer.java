@@ -28,8 +28,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.json.async.NonBlockingByteBufferJsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.github.d_sch.webfluxcustomjacksonstream.common.ThrowingLongConsumer;
-import io.github.d_sch.webfluxcustomjacksonstream.common.ThrowingRunnable;
+import io.github.d_sch.webfluxcommon.common.ThrowingLongConsumer;
+import io.github.d_sch.webfluxcommon.common.ThrowingRunnable;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.FluxSink;

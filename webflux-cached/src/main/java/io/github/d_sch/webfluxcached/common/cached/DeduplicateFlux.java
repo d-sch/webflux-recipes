@@ -19,7 +19,7 @@ package io.github.d_sch.webfluxcached.common.cached;
 import java.util.Map;
 import java.util.function.Function;
 
-import io.github.d_sch.webfluxcached.common.SchedulerContext;
+import io.github.d_sch.webfluxcommon.common.SchedulerContext;
 import lombok.NonNull;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;

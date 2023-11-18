@@ -18,7 +18,7 @@ package io.github.d_sch.webfluxcommon.common;
 
 public interface ThrowingRunnable {
 
-    void run();
+    void run() throws Exception;
 
     static <T> Runnable wrap(ThrowingRunnable throwingRunnable) {
         return () -> {

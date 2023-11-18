@@ -17,6 +17,7 @@
 package io.github.d_sch.webfluxcustomjacksonstream.common;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -27,7 +28,6 @@ import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 
 import io.github.d_sch.webfluxcommon.common.ThrowingConsumer;
 import io.github.d_sch.webfluxcommon.common.ThrowingSupplier;
-import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
 import reactor.core.publisher.Flux;
 
 public class JsonWriter<T> {

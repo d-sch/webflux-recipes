@@ -51,6 +51,11 @@
 		</dependency>
 		<dependency>
 			<groupId>io.github.d-sch</groupId>
+			<artifactId>webflux-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.d-sch</groupId>
 			<artifactId>webflux-custom-jackson-stream</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

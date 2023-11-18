@@ -77,8 +77,17 @@ public class CachedTest {
     public void test() {
 
         Cached<Integer, String> cached  
-            = Cached.build(reactorResourceFactory, String::valueOf, Integer::parseInt, keyFlux -> 
-            keyFlux.transform(flux -> flux.<Entry<Integer, String>>concatMap(key -> Mono.defer(() -> Mono.just(KeyValueHolder.of(key, "Test")))))
+            = Cached.build(
+                reactorResourceFactory, 
+                String::valueOf, 
+                Integer::parseInt, 
+                keyFlux -> keyFlux.transform(
+                    flux -> flux.concatMap(
+                        key -> Mono.defer(
+                            () -> Mono.just(KeyValueHolder.of(key, "Test"))
+                        )
+                    )
+                )
         );
 
 

@@ -38,18 +38,14 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
     @NonNull
     private LoopResources loopResources;
 
-    private LRUCacheMap<String, T> cacheMap = 
-            LRUCacheMap.<String, T>builder()
-                .map(new HashMap<>())
-                .entryExpirationChronoUnit(ChronoUnit.SECONDS)
-                .entryExpirationDuration(60)
-                .build();  
+    private LRUCacheMap<String, T> cacheMap;  
     
     private SchedulerContext schedulerContext;           
    
     private Disposable scheduledCleanUp;
 
-    public FluxCacheImpl(LoopResources loopResources) {
+    public FluxCacheImpl(LoopResources loopResources, LRUCacheMap<String, T> lruCacheMap) {
+        this.cacheMap = lruCacheMap;
         this.loopResources = loopResources;
         //Create SchedulerContext
         //ensure one single event loop is used before and after cache action
@@ -58,6 +54,17 @@ public class FluxCacheImpl<T> implements FluxCache<T> {
         this.schedulerContext = SchedulerContext.EXECUTOR_BUILDER.apply(
             eventLoop,
             eventLoop
+        );
+    }
+
+    public FluxCacheImpl(LoopResources loopResources) {
+        this(
+            loopResources,
+            LRUCacheMap.<String, T>builder()
+                .map(new HashMap<>())
+                .entryExpirationChronoUnit(ChronoUnit.SECONDS)
+                .entryExpirationDuration(60)
+                .build()
         );
     }
 
