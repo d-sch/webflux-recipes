@@ -19,7 +19,8 @@
     <packaging>pom</packaging>
     <modules>
 		<module>webflux-common</module>
-		<module>webflux-config</module>
+		<module>webflux-r2dbc-config</module>
+		<module>webflux-webclient-config</module>
         <module>webflux-cached</module>
         <module>webflux-custom-jackson-stream</module>
 		<module>webflux-recipes-examples</module>

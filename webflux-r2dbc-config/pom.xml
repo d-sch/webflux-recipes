@@ -8,28 +8,15 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<groupId>io.github.d-sch</groupId>
-	<artifactId>webflux-recipes-examples</artifactId>
+	<artifactId>webflux-r2dbc-config</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>webflux-recipes-examples</name>
+	<name>webflux-r2dbc-config</name>
 	<description>Demo project for Spring Boot</description>
 	<packaging>jar</packaging>
 	<properties>
 		<java.version>17</java.version>
-		<parent.version>0.0.1-SNAPSHOT</parent.version>
 	</properties>
 	<dependencies>
-
-		<dependency>
-			<groupId>io.r2dbc</groupId>
-			<artifactId>r2dbc-h2</artifactId>
-			<version>1.0.0.RELEASE</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -40,7 +27,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -59,26 +53,16 @@
 		<dependency>
 			<groupId>io.github.d-sch</groupId>
 			<artifactId>webflux-custom-jackson-stream</artifactId>
-			<version>${parent.version}</version>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.d-sch</groupId>
-			<artifactId>webflux-common</artifactId>
-			<version>${parent.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.github.d-sch</groupId>
-			<artifactId>webflux-r2dbc-config</artifactId>
-			<version>${parent.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.github.d-sch</groupId>
-			<artifactId>webflux-webclient-config</artifactId>
-			<version>${parent.version}</version>
+			<artifactId>webflux-cached</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
-		<plugins>
+		<!-- <plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -90,7 +74,7 @@
 					</execution>
 				</executions>
 			</plugin>
-		</plugins>		
+		</plugins>		 -->
 	</build>
 
 </project>
