@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package io.github.d_sch.webfluxcustomjacksonstream.common;
+package io.github.d_sch.webfluxcommon.common;
+import java.util.function.LongConsumer;
 
-public interface ThrowingRunnable {
+public interface ThrowingLongConsumer {
+    void accept(long  value) throws Exception;
 
-    void run() throws Exception;
-
-    static <T> Runnable wrap(ThrowingRunnable throwingRunnable) {
-        return () -> {
+    static LongConsumer wrap(ThrowingLongConsumer consumer) {
+        return (value) -> {
             try {
-                throwingRunnable.run();
+                consumer.accept(value);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         };
     }
-    
 }
