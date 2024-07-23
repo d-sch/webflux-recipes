@@ -28,8 +28,10 @@ import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import io.github.d_sch.webfluxcommon.common.ThrowingConsumer;
 import io.github.d_sch.webfluxcommon.common.ThrowingSupplier;
 import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
+@Slf4j
 public class JsonWriter<T> {
     DataBufferOutputStream dataBufferOutputStream;
     JsonGenerator jsonGenerator;
@@ -73,23 +75,42 @@ public class JsonWriter<T> {
                     JsonFactory.builder().build(), 
                     x -> fluxSink.next(x)
                 );
+
             AtomicBoolean isEmpty = new AtomicBoolean(true);
-            inFlux.subscribe(
+            AtomicBoolean isDone = new AtomicBoolean(false);
+
+            var subscription = inFlux.subscribe(
                 x -> {
-                    if (isEmpty.get() && isEmpty.compareAndSet(true, false)) {
+                    if (!isDone.get() && isEmpty.get() && isEmpty.compareAndSet(true, false)) {
                         generator.startArray();
                     }
                     generator.writeObject(x);
                 }, throwable -> {
-                    fluxSink.error(throwable);
-                }, () -> {
-                    if (isEmpty.get()) {
-                        generator.writeEmptyArray();
-                    } else {
-                        generator.endArray();
+                    if (!isDone.get()) {
+                        isDone.set(true);
+                        fluxSink.error(throwable);
                     }
-                    fluxSink.complete();
-                });
+                }, () -> {
+                    if (!isDone.get()) {
+                        isDone.set(true);
+                        if (isEmpty.get()) {
+                            generator.writeEmptyArray();
+                        } else {
+                            generator.endArray();
+                        }
+                        fluxSink.complete();
+                    }
+                }
+            );
+            fluxSink.onCancel(
+                () -> {
+                    if (!isDone.get()) {
+                        log.debug("Cancelled.");
+                        isDone.set(true);                  
+                        subscription.dispose();                        
+                    }
+                }
+            );
         });
     }
 }  
