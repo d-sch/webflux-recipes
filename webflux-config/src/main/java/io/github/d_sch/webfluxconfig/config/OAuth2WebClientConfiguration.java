@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.client.web.server.ServerOAuth2Authori
 
 import io.github.d_sch.webfluxconfig.config.qualifier.OAuth2WebClient;
 
+/// Configuration class to create a WebClient bean configured for OAuth2 authentication.
 @Configuration
 public class OAuth2WebClientConfiguration {
     @Bean

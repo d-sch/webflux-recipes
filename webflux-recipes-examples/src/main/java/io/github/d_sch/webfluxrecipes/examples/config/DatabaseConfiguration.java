@@ -1,0 +1,22 @@
+package io.github.d_sch.webfluxrecipes.examples.config;
+
+import org.springframework.boot.r2dbc.ConnectionFactoryBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+import io.github.d_sch.webfluxconfig.config.R2DBCConfigurationProperties;
+import io.r2dbc.spi.ConnectionFactory;
+
+@Configuration
+@Import(R2DBCConfigurationProperties.class)
+public class DatabaseConfiguration {
+    
+    @Bean
+    ConnectionFactory getDemoConnectionFactory(R2DBCConfigurationProperties properties) {
+        return ConnectionFactoryBuilder
+            .withOptions(properties.getConnectionFactoryOptions("demo")            
+        ).build();
+    }
+    
+}
