@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,19 +66,19 @@ public class CachedTest {
     public void getAll_withSingleKey_returnsLoadedMapping() {
 
         // Arrange: Build a cache with a loader that maps keys to a single "Test" value
-        Cached<Integer, String> cached  
-            = Cached.build(reactorResourceFactory, String::valueOf, Integer::parseInt, keyFlux -> 
-            keyFlux.transform(flux -> flux.<Entry<Integer, String>>concatMap(key -> Mono.defer(() -> Mono.just(KeyValueHolder.of(key, "Test")))) )
+        Cached<String, Integer> cached  
+            = Cached.build(reactorResourceFactory, Function.identity(), String::valueOf, keyFlux -> 
+            keyFlux.transform(flux -> flux.<Entry<String, Integer>>concatMap(key -> Mono.defer(() -> Mono.just(KeyValueHolder.of(key, 1)))) )
         );
 
 
         // Act: Request the key
-        Flux<Entry<Integer, String>> x = cached.getAll(Flux.defer(() -> Flux.just(1)));   
+        Flux<Entry<String, Integer>> x = cached.getAll(Flux.defer(() -> Flux.just("Test")));   
         StepVerifier.create(x)
             .assertNext(entry -> {
                 assertNotNull(entry);
-                assertEquals(1, entry.getKey());
-                assertEquals("Test", entry.getValue());
+                assertEquals("Test", entry.getKey());
+                assertEquals(1, entry.getValue());
             }).verifyComplete();
     }
 
@@ -85,15 +86,15 @@ public class CachedTest {
     @DisplayName("getAll with multiple keys returns all loaded mappings")
     public void getAll_withMultipleKeys_returnsAllLoadedMappings() {
         var loopResources = reactorResourceFactory.getLoopResources();
-        // Build loader returning entry for each key with "V" + key
-        Cached<Integer, String> cached = Cached.build(reactorResourceFactory, String::valueOf, Integer::parseInt, keyFlux ->
-            keyFlux.concatMap(k -> Mono.just(KeyValueHolder.of(k, "V" + k)))
+        // Build loader returning entry for each key as integer parse of the key string
+        Cached<String, Integer> cached = Cached.build(reactorResourceFactory, Function.identity(), String::valueOf, keyFlux ->
+            keyFlux.concatMap(k -> Mono.just(KeyValueHolder.of(k, Integer.parseInt(k))))
         );
 
-        StepVerifier.create(cached.getAll(Flux.just(1, 2, 3)))
-            .expectNextMatches(e -> e.getKey() == 1 && "V1".equals(e.getValue()))
-            .expectNextMatches(e -> e.getKey() == 2 && "V2".equals(e.getValue()))
-            .expectNextMatches(e -> e.getKey() == 3 && "V3".equals(e.getValue()))
+        StepVerifier.create(cached.getAll(Flux.just("1", "2", "3")))
+            .expectNextMatches(e -> e.getKey().equals("1") && e.getValue() == 1)
+            .expectNextMatches(e -> e.getKey().equals("2") && e.getValue() == 2)
+            .expectNextMatches(e -> e.getKey().equals("3") && e.getValue() == 3)
             .verifyComplete();
     }
 
