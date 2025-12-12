@@ -26,7 +26,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-@Builder
+
 /**
  * SchedulerContext
  * 
@@ -39,6 +39,7 @@ import reactor.core.scheduler.Schedulers;
  * thread is able to access a resource sequentially.
  * 
  */
+@Builder
 public final class SchedulerContext {
 
     @Getter
@@ -46,7 +47,7 @@ public final class SchedulerContext {
     private Scheduler publishOnScheduler;
 
     public static final Function<String, SchedulerContext> SINGLE_BUILDER = 
-            name -> {
+            name -> {                             
                 return SchedulerContext
                     .builder()
                     .scheduler(Schedulers.newSingle(name))

@@ -19,7 +19,7 @@ package io.github.d_sch.webfluxcached.common.cached;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.springframework.http.client.reactive.ReactorResourceFactory;
+import org.springframework.http.client.ReactorResourceFactory;
 
 import io.github.d_sch.webfluxcached.common.KeyValueHolder;
 import io.github.d_sch.webfluxcached.common.cache.FluxCache;

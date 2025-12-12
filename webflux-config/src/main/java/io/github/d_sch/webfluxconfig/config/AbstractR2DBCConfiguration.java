@@ -1,11 +1,8 @@
 package io.github.d_sch.webfluxconfig.config;
 
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import org.springframework.boot.autoconfigure.r2dbc.R2dbcProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.r2dbc.autoconfigure.R2dbcProperties;
 
 import io.github.d_sch.webfluxcommon.common.Predicates;
 import io.r2dbc.spi.ConnectionFactoryOptions;

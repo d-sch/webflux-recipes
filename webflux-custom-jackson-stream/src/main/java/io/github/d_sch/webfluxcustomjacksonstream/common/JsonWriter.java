@@ -18,18 +18,18 @@ package io.github.d_sch.webfluxcustomjacksonstream.common;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 
 import io.github.d_sch.webfluxcommon.common.ThrowingConsumer;
-import io.github.d_sch.webfluxcommon.common.ThrowingSupplier;
 import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
+import tools.jackson.core.JsonEncoding;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 public class JsonWriter<T> {
@@ -38,7 +38,8 @@ public class JsonWriter<T> {
 
     public JsonWriter(DataBufferFactory dataBufferFactory, JsonFactory jsonFactory, Consumer<DataBuffer> consumer) {
         this.dataBufferOutputStream = new DataBufferOutputStream(consumer);
-        this.jsonGenerator = ThrowingSupplier.wrap(() -> jsonFactory.createGenerator(dataBufferOutputStream)).get();
+        final var objectMapper = new ObjectMapper(jsonFactory);
+        this.jsonGenerator = objectMapper.createGenerator(dataBufferOutputStream, JsonEncoding.UTF8);
     }
 
     private void generate(ThrowingConsumer<JsonGenerator> consumer) {
@@ -46,7 +47,7 @@ public class JsonWriter<T> {
     }
 
     public void writeObject(T pojo) {
-        generate(jsonGenerator -> jsonGenerator.writeObject(pojo));
+        generate(jsonGenerator -> jsonGenerator.writePOJO(pojo));
     }
 
     public void startArray() {
